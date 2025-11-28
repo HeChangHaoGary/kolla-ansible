@@ -1,0 +1,9 @@
+---
+- name: Pulling kafka images
+  become: true
+  kolla_container:
+    action: "pull_container"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ item.value.image }}"
+  when: item.value.enabled | bool
+  with_dict: "{{ kafka_services | select_services_enabled_and_mapped_to_host }}"

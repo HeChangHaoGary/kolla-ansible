@@ -76,6 +76,7 @@
         - enable_watcher_{{ enable_watcher | bool }}
         - enable_zun_{{ enable_zun | bool }}
         - enable_dingoops_{{ enable_dingoops | bool }}
+        - enable_kafka_{{ enable_kafka | bool }}
   tags: always
 
 - name: Apply role prechecks
@@ -997,3 +998,16 @@
   roles:
     - { role: dingoops,
         tags: dingoops }
+
+- name: Apply role kafka
+  gather_facts: false
+  hosts:
+    - kafka-broker
+    - kafka-connect
+    - kafka-mm2
+    - kafka-ui
+    - '&enable_kafka_True'
+  serial: '{{ kolla_serial|default("0") }}'
+  roles:
+    - { role: kafka,
+        tags: kafka }

@@ -1,0 +1,9 @@
+---
+- name: Stopping kafka containers
+  become: true
+  kolla_container:
+    action: "stop_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+  when: item.value.enabled | bool
+  with_dict: "{{ kafka_services | select_services_enabled_and_mapped_to_host }}"

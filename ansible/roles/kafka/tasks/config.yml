@@ -1,0 +1,123 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item.key }}"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
+  with_dict: "{{ kafka_services | select_services_enabled_and_mapped_to_host }}"
+
+- name: Copying over default config.json files
+  template:
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
+  become: true
+  with_dict: "{{ kafka_services | select_services_enabled_and_mapped_to_host }}"
+  notify:
+    - "Restart {{ item.key }} container"
+
+- name: Copying over kafka-broker server.properties
+  template:
+    src: "server.properties.j2"
+    dest: "{{ node_config_directory }}/kafka-broker/server.properties"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups['kafka-broker']
+    - kafka_services['kafka-broker'].enabled | bool
+  notify:
+    - Restart kafka-broker container
+
+- name: Copying over kafka-broker log4j.properties
+  template:
+    src: "log4j.properties.j2"
+    dest: "{{ node_config_directory }}/kafka-broker/log4j.properties"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups['kafka-broker']
+    - kafka_services['kafka-broker'].enabled | bool
+  notify:
+    - Restart kafka-broker container
+
+- name: Copying over kafka-connect configuration
+  template:
+    src: "connect-distributed.properties.j2"
+    dest: "{{ node_config_directory }}/kafka-connect/connect-distributed.properties"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups['kafka-connect']
+    - kafka_services['kafka-connect'].enabled | bool
+  notify:
+    - Restart kafka-connect container
+
+- name: Copying over kafka-connect log4j.properties
+  template:
+    src: "connect-log4j.properties.j2"
+    dest: "{{ node_config_directory }}/kafka-connect/connect-log4j.properties"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups['kafka-connect']
+    - kafka_services['kafka-connect'].enabled | bool
+  notify:
+    - Restart kafka-connect container
+
+- name: Copying over kafka-mm2 configuration
+  template:
+    src: "mm2.properties.j2"
+    dest: "{{ node_config_directory }}/kafka-mm2/mm2.properties"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups['kafka-mm2']
+    - kafka_services['kafka-mm2'].enabled | bool
+  notify:
+    - Restart kafka-mm2 container
+
+- name: Copying over kafka-mm2 log4j.properties
+  template:
+    src: "connect-log4j.properties.j2"
+    dest: "{{ node_config_directory }}/kafka-mm2/connect-log4j.properties"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups['kafka-mm2']
+    - kafka_services['kafka-mm2'].enabled | bool
+  notify:
+    - Restart kafka-mm2 container
+
+- name: Copying over kafka-mm2 SSL truststore (if configured)
+  copy:
+    src: "{{ kafka_mm2_ssl_truststore_src }}"
+    dest: "{{ node_config_directory }}/kafka-mm2/client.truststore.jks"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups['kafka-mm2']
+    - kafka_services['kafka-mm2'].enabled | bool
+    - kafka_mm2_ssl_truststore_src is defined
+  notify:
+    - Restart kafka-mm2 container
+
+- name: Check kafka containers
+  become: true
+  kolla_container:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    environment: "{{ item.value.environment | default(omit) }}"
+    volumes: "{{ item.value.volumes }}"
+    dimensions: "{{ item.value.dimensions }}"
+    healthcheck: "{{ item.value.healthcheck | default(omit) }}"
+  when:
+    - kolla_action != "config"
+    - item.value.enabled | bool
+  with_dict: "{{ kafka_services | select_services_enabled_and_mapped_to_host }}"
+  notify:
+    - "Restart {{ item.key }} container"

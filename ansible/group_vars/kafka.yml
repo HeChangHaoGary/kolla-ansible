@@ -1,0 +1,51 @@
+---
+####################
+# Kafka Configuration
+####################
+
+# Enable Kafka services
+enable_kafka: "yes"
+enable_kafka_connect: "yes"
+enable_kafka_mm2: "yes"
+enable_kafka_ui: "yes"
+
+# Kafka Cluster Configuration
+kafka_cluster_id_override: "kafka-kolla-cluster-1"
+kafka_kraft_mode: "yes"
+
+# Kafka Replication Settings
+kafka_default_replication_factor: "3"
+kafka_min_insync_replicas: "2"
+kafka_offsets_topic_replication_factor: "3"
+kafka_transaction_state_log_replication_factor: "3"
+kafka_transaction_state_log_min_isr: "2"
+
+# Kafka Retention Settings
+kafka_log_retention_hours: "168"  # 7 days
+kafka_log_retention_bytes: "-1"   # unlimited
+
+# Kafka JVM Settings
+kafka_broker_heap_opts: "-Xms2G -Xmx2G"
+kafka_connect_heap_opts: "-Xms1G -Xmx1G"
+kafka_mm2_heap_opts: "-Xms1G -Xmx1G"
+
+# Kafka UI Configuration
+kafka_ui_cluster_name: "kolla-kafka"
+kafka_ui_username: "admin"
+kafka_ui_password_override: "changeme"  # Change this in production!
+
+# MirrorMaker 2 Configuration
+# Uncomment and configure the following when using MirrorMaker 2
+#kafka_mm2_source_cluster: "source"
+#kafka_mm2_target_cluster: "destination"
+#kafka_mm2_source_bootstrap_servers: "10.220.244.176:9092,10.220.244.177:9092,10.220.244.178:9092"
+#kafka_mm2_target_bootstrap_servers: "10.220.57.24:9092,10.220.57.25:9092,10.220.57.26:9092"
+#kafka_mm2_topics_pattern: ".*"
+#kafka_mm2_replication_factor: "3"
+
+# For SASL/SSL configuration (optional)
+#kafka_mm2_target_security_protocol: "SASL_SSL"
+#kafka_mm2_target_sasl_mechanism: "PLAIN"
+#kafka_mm2_target_sasl_jaas_config: "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"user\" password=\"password\";"
+#kafka_mm2_target_ssl_truststore_location: "/etc/kafka/secrets/client.truststore.jks"
+#kafka_mm2_ssl_truststore_src: "/path/to/local/client.truststore.jks"

@@ -1,0 +1,35 @@
+{
+    "command": "{% if kafka_kraft_mode | bool %}/opt/kafka/bin/kafka-storage.sh format -t {{ kafka_cluster_id }} -c {{ container_config_directory }}/server.properties && {% endif %}/opt/kafka/bin/kafka-server-start.sh {{ container_config_directory }}/server.properties",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/server.properties",
+            "dest": "/opt/kafka/config/server.properties",
+            "owner": "kafka",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/log4j.properties",
+            "dest": "/opt/kafka/config/log4j.properties",
+            "owner": "kafka",
+            "perm": "0600"
+        }{% if kafka_enable_sasl | default(false) %},
+        {
+            "source": "{{ container_config_directory }}/kafka_server_jaas.conf",
+            "dest": "/opt/kafka/config/kafka_server_jaas.conf",
+            "owner": "kafka",
+            "perm": "0600"
+        }{% endif %}
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/kafka",
+            "owner": "kafka:kafka",
+            "recurse": true
+        },
+        {
+            "path": "/var/lib/kafka/data",
+            "owner": "kafka:kafka",
+            "recurse": true
+        }
+    ]
+}

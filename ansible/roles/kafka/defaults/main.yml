@@ -1,0 +1,250 @@
+---
+####################
+# Kafka Services
+####################
+kafka_services:
+  kafka-broker:
+    container_name: kafka_broker
+    group: kafka-broker
+    enabled: "{{ enable_kafka | bool }}"
+    image: "{{ kafka_broker_image_full }}"
+    environment:
+      KAFKA_HEAP_OPTS: "{{ kafka_broker_heap_opts }}"
+      KAFKA_OPTS: "{{ kafka_broker_opts }}"
+    volumes: "{{ kafka_broker_default_volumes + kafka_broker_extra_volumes }}"
+    dimensions: "{{ kafka_broker_dimensions }}"
+    healthcheck: "{{ kafka_broker_healthcheck }}"
+  kafka-connect:
+    container_name: kafka_connect
+    group: kafka-connect
+    enabled: "{{ enable_kafka_connect | bool }}"
+    image: "{{ kafka_connect_image_full }}"
+    environment:
+      KAFKA_HEAP_OPTS: "{{ kafka_connect_heap_opts }}"
+      KAFKA_OPTS: "{{ kafka_connect_opts }}"
+    volumes: "{{ kafka_connect_default_volumes + kafka_connect_extra_volumes }}"
+    dimensions: "{{ kafka_connect_dimensions }}"
+    healthcheck: "{{ kafka_connect_healthcheck }}"
+  kafka-mm2:
+    container_name: kafka_mm2
+    group: kafka-mm2
+    enabled: "{{ enable_kafka_mm2 | bool }}"
+    image: "{{ kafka_mm2_image_full }}"
+    environment:
+      KAFKA_HEAP_OPTS: "{{ kafka_mm2_heap_opts }}"
+      KAFKA_OPTS: "{{ kafka_mm2_opts }}"
+    volumes: "{{ kafka_mm2_default_volumes + kafka_mm2_extra_volumes }}"
+    dimensions: "{{ kafka_mm2_dimensions }}"
+    healthcheck: "{{ kafka_mm2_healthcheck }}"
+  kafka-ui:
+    container_name: kafka_ui
+    group: kafka-ui
+    enabled: "{{ enable_kafka_ui | bool }}"
+    image: "{{ kafka_ui_image_full }}"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: "{{ kafka_ui_cluster_name }}"
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "{{ kafka_broker_bootstrap_servers }}"
+      AUTH_TYPE: "{{ kafka_ui_auth_type }}"
+      SPRING_SECURITY_USER_NAME: "{{ kafka_ui_username }}"
+      SPRING_SECURITY_USER_PASSWORD: "{{ kafka_ui_password }}"
+    volumes: "{{ kafka_ui_default_volumes + kafka_ui_extra_volumes }}"
+    dimensions: "{{ kafka_ui_dimensions }}"
+    healthcheck: "{{ kafka_ui_healthcheck }}"
+
+####################
+# Docker Images
+####################
+kafka_broker_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}kafka"
+kafka_broker_tag: "{{ openstack_tag }}"
+kafka_broker_image_full: "{{ kafka_broker_image }}:{{ kafka_broker_tag }}"
+
+kafka_connect_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}kafka"
+kafka_connect_tag: "{{ openstack_tag }}"
+kafka_connect_image_full: "{{ kafka_connect_image }}:{{ kafka_connect_tag }}"
+
+kafka_mm2_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}kafka"
+kafka_mm2_tag: "{{ openstack_tag }}"
+kafka_mm2_image_full: "{{ kafka_mm2_image }}:{{ kafka_mm2_tag }}"
+
+kafka_ui_image: "{{ docker_registry ~ '/' if docker_registry else '' }}provectuslabs/kafka-ui"
+kafka_ui_tag: "latest"
+kafka_ui_image_full: "{{ kafka_ui_image }}:{{ kafka_ui_tag }}"
+
+####################
+# Container Dimensions
+####################
+kafka_broker_dimensions: "{{ default_container_dimensions }}"
+kafka_connect_dimensions: "{{ default_container_dimensions }}"
+kafka_mm2_dimensions: "{{ default_container_dimensions }}"
+kafka_ui_dimensions: "{{ default_container_dimensions }}"
+
+####################
+# Health Checks - Kafka Broker
+####################
+kafka_broker_enable_healthchecks: "{{ enable_container_healthchecks }}"
+kafka_broker_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+kafka_broker_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+kafka_broker_healthcheck_start_period: "60s"
+kafka_broker_healthcheck_test: ["CMD-SHELL", "kafka-broker-api-versions.sh --bootstrap-server localhost:{{ kafka_port }} --version"]
+kafka_broker_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+kafka_broker_healthcheck:
+  interval: "{{ kafka_broker_healthcheck_interval }}"
+  retries: "{{ kafka_broker_healthcheck_retries }}"
+  start_period: "{{ kafka_broker_healthcheck_start_period }}"
+  test: "{% if kafka_broker_enable_healthchecks | bool %}{{ kafka_broker_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ kafka_broker_healthcheck_timeout }}"
+
+####################
+# Health Checks - Kafka Connect
+####################
+kafka_connect_enable_healthchecks: "{{ enable_container_healthchecks }}"
+kafka_connect_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+kafka_connect_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+kafka_connect_healthcheck_start_period: "60s"
+kafka_connect_healthcheck_test: ["CMD-SHELL", "curl -f http://localhost:{{ kafka_connect_port }}/connectors || exit 1"]
+kafka_connect_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+kafka_connect_healthcheck:
+  interval: "{{ kafka_connect_healthcheck_interval }}"
+  retries: "{{ kafka_connect_healthcheck_retries }}"
+  start_period: "{{ kafka_connect_healthcheck_start_period }}"
+  test: "{% if kafka_connect_enable_healthchecks | bool %}{{ kafka_connect_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ kafka_connect_healthcheck_timeout }}"
+
+####################
+# Health Checks - MirrorMaker 2
+####################
+kafka_mm2_enable_healthchecks: "{{ enable_container_healthchecks }}"
+kafka_mm2_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+kafka_mm2_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+kafka_mm2_healthcheck_start_period: "60s"
+kafka_mm2_healthcheck_test: ["CMD-SHELL", "curl -f http://localhost:{{ kafka_mm2_port }}/connectors || exit 1"]
+kafka_mm2_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+kafka_mm2_healthcheck:
+  interval: "{{ kafka_mm2_healthcheck_interval }}"
+  retries: "{{ kafka_mm2_healthcheck_retries }}"
+  start_period: "{{ kafka_mm2_healthcheck_start_period }}"
+  test: "{% if kafka_mm2_enable_healthchecks | bool %}{{ kafka_mm2_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ kafka_mm2_healthcheck_timeout }}"
+
+####################
+# Health Checks - Kafka UI
+####################
+kafka_ui_enable_healthchecks: "{{ enable_container_healthchecks }}"
+kafka_ui_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+kafka_ui_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+kafka_ui_healthcheck_start_period: "30s"
+kafka_ui_healthcheck_test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:{{ kafka_ui_port }} || exit 1"]
+kafka_ui_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+kafka_ui_healthcheck:
+  interval: "{{ kafka_ui_healthcheck_interval }}"
+  retries: "{{ kafka_ui_healthcheck_retries }}"
+  start_period: "{{ kafka_ui_healthcheck_start_period }}"
+  test: "{% if kafka_ui_enable_healthchecks | bool %}{{ kafka_ui_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ kafka_ui_healthcheck_timeout }}"
+
+####################
+# Kafka Broker Volumes
+####################
+kafka_broker_default_volumes:
+  - "{{ node_config_directory }}/kafka-broker/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kafka_data:/var/lib/kafka/data/"
+  - "kolla_logs:/var/log/kolla/"
+
+kafka_broker_extra_volumes: "{{ default_extra_volumes }}"
+
+####################
+# Kafka Connect Volumes
+####################
+kafka_connect_default_volumes:
+  - "{{ node_config_directory }}/kafka-connect/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kafka_connect_data:/var/lib/kafka/connect/"
+  - "kafka_connect_plugins:/opt/kafka/plugins/"
+  - "kolla_logs:/var/log/kolla/"
+
+kafka_connect_extra_volumes: "{{ default_extra_volumes }}"
+
+####################
+# MirrorMaker 2 Volumes
+####################
+kafka_mm2_default_volumes:
+  - "{{ node_config_directory }}/kafka-mm2/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kafka_mm2_data:/var/lib/kafka/mm2/"
+  - "kafka_mm2_secrets:/etc/kafka/secrets/:ro"
+  - "kolla_logs:/var/log/kolla/"
+
+kafka_mm2_extra_volumes: "{{ default_extra_volumes }}"
+
+####################
+# Kafka UI Volumes
+####################
+kafka_ui_default_volumes:
+  - "{{ node_config_directory }}/kafka-ui/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+
+kafka_ui_extra_volumes: "{{ default_extra_volumes }}"
+
+####################
+# Kafka Configuration
+####################
+kafka_cluster_id: "{{ kafka_cluster_id_override | default('kafka-kolla-cluster-1') }}"
+kafka_broker_id: "{{ groups['kafka-broker'].index(inventory_hostname) }}"
+kafka_port: "9092"
+kafka_jmx_port: "9999"
+kafka_connect_port: "8083"
+kafka_mm2_port: "8084"
+kafka_ui_port: "8080"
+
+# Kafka Broker Bootstrap Servers
+kafka_broker_bootstrap_servers: "{% for host in groups['kafka-broker'] %}{{ 'api' | kolla_address(host) }}:{{ kafka_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+
+# Kafka Zookeeper (if using Zookeeper mode)
+kafka_zookeeper_connect: "{% for host in groups['zookeeper'] %}{{ 'api' | kolla_address(host) }}:2181{% if not loop.last %},{% endif %}{% endfor %}"
+
+# KRaft Mode Configuration (Kafka 3.0+)
+kafka_kraft_mode: "yes"
+kafka_controller_quorum_voters: "{% for host in groups['kafka-broker'] %}{{ groups['kafka-broker'].index(host) }}@{{ 'api' | kolla_address(host) }}:9093{% if not loop.last %},{% endif %}{% endfor %}"
+
+# Kafka Broker JVM Options
+kafka_broker_heap_opts: "-Xms2G -Xmx2G"
+kafka_broker_opts: "-Djava.security.auth.login.config={{ container_config_directory }}/kafka_server_jaas.conf"
+
+# Kafka Connect JVM Options
+kafka_connect_heap_opts: "-Xms1G -Xmx1G"
+kafka_connect_opts: ""
+
+# MirrorMaker 2 JVM Options
+kafka_mm2_heap_opts: "-Xms1G -Xmx1G"
+kafka_mm2_opts: ""
+
+# Kafka Replication
+kafka_default_replication_factor: "3"
+kafka_min_insync_replicas: "2"
+kafka_offsets_topic_replication_factor: "3"
+kafka_transaction_state_log_replication_factor: "3"
+kafka_transaction_state_log_min_isr: "2"
+
+# Kafka Log Retention
+kafka_log_retention_hours: "168"  # 7 days
+kafka_log_retention_bytes: "-1"  # unlimited
+kafka_log_segment_bytes: "1073741824"  # 1GB
+
+# Kafka UI Configuration
+kafka_ui_cluster_name: "kolla-kafka"
+kafka_ui_auth_type: "LOGIN_FORM"
+kafka_ui_username: "admin"
+kafka_ui_password: "{{ kafka_ui_password_override | default('changeme') }}"
+
+# MirrorMaker 2 Configuration
+kafka_mm2_source_cluster: "source"
+kafka_mm2_target_cluster: "destination"
+kafka_mm2_topics_pattern: ".*"
+kafka_mm2_groups_pattern: ".*"
+kafka_mm2_replication_factor: "3"
