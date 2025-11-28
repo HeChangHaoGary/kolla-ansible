@@ -1,0 +1,40 @@
+{
+    "command": "/opt/kafka/bin/connect-mirror-maker.sh {{ container_config_directory }}/mm2.properties",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/mm2.properties",
+            "dest": "/opt/kafka/config/mm2.properties",
+            "owner": "kafka",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/connect-log4j.properties",
+            "dest": "/opt/kafka/config/connect-log4j.properties",
+            "owner": "kafka",
+            "perm": "0600"
+        }{% if kafka_mm2_ssl_truststore_location | default(false) %},
+        {
+            "source": "{{ container_config_directory }}/client.truststore.jks",
+            "dest": "/etc/kafka/secrets/client.truststore.jks",
+            "owner": "kafka",
+            "perm": "0600"
+        }{% endif %}
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/kafka-mm2",
+            "owner": "kafka:kafka",
+            "recurse": true
+        },
+        {
+            "path": "/var/lib/kafka/mm2",
+            "owner": "kafka:kafka",
+            "recurse": true
+        }{% if kafka_mm2_ssl_truststore_location | default(false) %},
+        {
+            "path": "/etc/kafka/secrets",
+            "owner": "kafka:kafka",
+            "recurse": true
+        }{% endif %}
+    ]
+}

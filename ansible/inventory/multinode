@@ -625,3 +625,21 @@ letsencrypt
 
 [letsencrypt-lego:children]
 letsencrypt
+
+# Kafka - distributed deployment
+# You can deploy Kafka components on dedicated nodes or reuse existing nodes
+# Example: deploy on control nodes for all-in-one, or dedicated kafka nodes for production
+[kafka:children]
+control
+
+[kafka-broker:children]
+kafka
+
+[kafka-connect:children]
+kafka
+
+[kafka-mm2:children]
+kafka
+
+[kafka-ui:children]
+kafka

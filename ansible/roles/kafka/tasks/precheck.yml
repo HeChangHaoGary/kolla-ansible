@@ -1,0 +1,60 @@
+---
+- name: Get container facts
+  become: true
+  kolla_container_facts:
+    container_engine: "{{ kolla_container_engine }}"
+    name:
+      - kafka_broker
+      - kafka_connect
+      - kafka_mm2
+      - kafka_ui
+  check_mode: false
+  register: container_facts
+
+- name: Checking free port for Kafka broker
+  wait_for:
+    host: "{{ 'api' | kolla_address }}"
+    port: "{{ kafka_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['kafka_broker'] is not defined
+    - inventory_hostname in groups['kafka-broker']
+    - kafka_services['kafka-broker'].enabled | bool
+
+- name: Checking free port for Kafka Connect
+  wait_for:
+    host: "{{ 'api' | kolla_address }}"
+    port: "{{ kafka_connect_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['kafka_connect'] is not defined
+    - inventory_hostname in groups['kafka-connect']
+    - kafka_services['kafka-connect'].enabled | bool
+
+- name: Checking free port for MirrorMaker 2
+  wait_for:
+    host: "{{ 'api' | kolla_address }}"
+    port: "{{ kafka_mm2_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['kafka_mm2'] is not defined
+    - inventory_hostname in groups['kafka-mm2']
+    - kafka_services['kafka-mm2'].enabled | bool
+
+- name: Checking free port for Kafka UI
+  wait_for:
+    host: "{{ 'api' | kolla_address }}"
+    port: "{{ kafka_ui_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['kafka_ui'] is not defined
+    - inventory_hostname in groups['kafka-ui']
+    - kafka_services['kafka-ui'].enabled | bool

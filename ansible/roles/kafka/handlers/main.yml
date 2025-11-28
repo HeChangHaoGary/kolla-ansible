@@ -1,0 +1,44 @@
+---
+- name: Restart kafka-broker container
+  become: true
+  kolla_container:
+    action: "restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ kafka_services['kafka-broker'].container_name }}"
+  when:
+    - kolla_action != "config"
+    - inventory_hostname in groups['kafka-broker']
+    - kafka_services['kafka-broker'].enabled | bool
+
+- name: Restart kafka-connect container
+  become: true
+  kolla_container:
+    action: "restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ kafka_services['kafka-connect'].container_name }}"
+  when:
+    - kolla_action != "config"
+    - inventory_hostname in groups['kafka-connect']
+    - kafka_services['kafka-connect'].enabled | bool
+
+- name: Restart kafka-mm2 container
+  become: true
+  kolla_container:
+    action: "restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ kafka_services['kafka-mm2'].container_name }}"
+  when:
+    - kolla_action != "config"
+    - inventory_hostname in groups['kafka-mm2']
+    - kafka_services['kafka-mm2'].enabled | bool
+
+- name: Restart kafka-ui container
+  become: true
+  kolla_container:
+    action: "restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ kafka_services['kafka-ui'].container_name }}"
+  when:
+    - kolla_action != "config"
+    - inventory_hostname in groups['kafka-ui']
+    - kafka_services['kafka-ui'].enabled | bool

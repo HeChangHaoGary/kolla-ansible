@@ -1,0 +1,13 @@
+---
+- name: Apply role kafka
+  gather_facts: false
+  hosts:
+    - kafka-broker
+    - kafka-connect
+    - kafka-mm2
+    - kafka-ui
+    - '&enable_kafka_True'
+  serial: '{{ kolla_serial|default("0") }}'
+  roles:
+    - { role: kafka,
+        tags: kafka }

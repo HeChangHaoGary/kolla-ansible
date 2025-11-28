@@ -1,0 +1,34 @@
+{
+    "command": "/opt/kafka/bin/connect-distributed.sh {{ container_config_directory }}/connect-distributed.properties",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/connect-distributed.properties",
+            "dest": "/opt/kafka/config/connect-distributed.properties",
+            "owner": "kafka",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/connect-log4j.properties",
+            "dest": "/opt/kafka/config/connect-log4j.properties",
+            "owner": "kafka",
+            "perm": "0600"
+        }
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/kafka-connect",
+            "owner": "kafka:kafka",
+            "recurse": true
+        },
+        {
+            "path": "/var/lib/kafka/connect",
+            "owner": "kafka:kafka",
+            "recurse": true
+        },
+        {
+            "path": "/opt/kafka/plugins",
+            "owner": "kafka:kafka",
+            "recurse": true
+        }
+    ]
+}

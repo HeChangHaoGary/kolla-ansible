@@ -607,3 +607,19 @@ letsencrypt
 
 [letsencrypt-lego:children]
 letsencrypt
+
+# Kafka
+[kafka:children]
+control
+
+[kafka-broker:children]
+kafka
+
+[kafka-connect:children]
+kafka
+
+[kafka-mm2:children]
+kafka
+
+[kafka-ui:children]
+kafka
